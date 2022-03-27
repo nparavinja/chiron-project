@@ -17,6 +17,7 @@ type server struct {
 
 func StartServer(config Config) (*server, error) {
 	// init db
+	// test
 	dbConnection, err := db.Connect(config.SQLConnectionString)
 	if err != nil {
 		// handle db errors
