@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"reflect"
 )
@@ -31,8 +30,25 @@ func (s *server) handleUser() http.HandlerFunc {
 		if err != nil {
 			return "errorUnmarshallingRequest", err
 		}
-		log.Println(req)
-		return callServiceMethod(s.userService, req.MethodName, req.Arguments)
+		service := s.patientService
+		method := reflect.ValueOf(service).MethodByName(req.MethodName)
+		parameters := make([]reflect.Value, len(req.Arguments))
+		for i, parameter := range req.Arguments {
+			p := reflect.New(method.Type().In(i))
+			instance := p.Interface()
+			err := json.Unmarshal([]byte(parameter), &instance)
+			if err != nil {
+				return "errorUnmarshalingParameter", err
+			}
+			parameters[i] = p.Elem()
+		}
+		result := method.Call(parameters)
+		// result is a slice of []reflect.Value
+		error, ok := result[1].Interface().(error)
+		if ok {
+			return nil, error
+		}
+		return result[0].Interface(), nil
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		result, err := invoke(w, r)
@@ -77,33 +93,6 @@ func (s *server) handleAdmin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// use thing
 	}
-}
-
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message})
-}
-
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
-}
-
-func callServiceMethod(service interface{}, methodName string, data ...interface{}) (interface{}, error) {
-	parameters := make([]reflect.Value, len(data))
-	for i := range parameters {
-		parameters[i] = reflect.ValueOf(data[i])
-	}
-	// result is a slice of []reflect.Value
-	results := reflect.ValueOf(service).MethodByName(methodName).Call(parameters)
-	log.Println("Service called: ", methodName, results)
-	error, ok := results[1].Interface().(error)
-	if ok {
-		return nil, error
-	}
-	return results[0].Interface(), nil
 }
 
 /*

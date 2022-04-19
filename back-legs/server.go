@@ -11,7 +11,8 @@ import (
 
 type server struct {
 	router             *mux.Router
-	userService        *services.UserService
+	patientService     *services.PatientService
+	doctorService      *services.DoctorService
 	examinationService *services.ExaminationService
 }
 
@@ -29,7 +30,8 @@ func StartServer(config Config) (*server, error) {
 	// init services
 	s := &server{
 		router:             mux.NewRouter(),
-		userService:        &services.UserService{UserRepository: &db.UserRepository{DB: dbConnection}},
+		patientService:     &services.PatientService{UserRepository: &db.UserRepository{DB: dbConnection}},
+		doctorService:      &services.DoctorService{UserRepository: &db.UserRepository{DB: dbConnection}},
 		examinationService: &services.ExaminationService{ExaminationRepository: &db.ExaminationRepository{DB: dbConnection}},
 	}
 	// init routes

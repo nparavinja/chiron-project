@@ -1,2 +1,3 @@
 sqlConnectionString: "root:klav1jatura@tcp(127.0.0.1:3306)/chiron?charset=utf8mb4&parseTime=True&loc=Local"
 port: 8000
+secretKey: "secret-dont-look"

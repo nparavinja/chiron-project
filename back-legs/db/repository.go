@@ -1,6 +1,10 @@
 package db
 
-import "gorm.io/gorm"
+import (
+	"errors"
+
+	"gorm.io/gorm"
+)
 
 type UserRepository struct {
 	DB *gorm.DB
@@ -16,16 +20,25 @@ type Repository interface {
 	Delete(map[string]interface{}) (*User, error)
 }
 
-func (r *UserRepository) Select(params ...interface{}) (*User, error) {
+func (r *UserRepository) Select(user any, searchType string, params ...interface{}) (*User, error) {
 	// or map[string]interface{}
 	// queries here
 	// user service
+	switch searchType {
+	case "register":
+		// parameters := make
+		// implement logi for username, email if exist
+	case "login":
+
+	default:
+
+	}
 
 	// var p Patient
 	// db.Joins("User").Find(&p, 1)
 	// result := db.Joins("User").First(&p, "username = ?", "oljasolja")
 
-	// // Struct
+	// // Struct0
 	// db.Where(&User{Name: "jinzhu", Age: 20}).First(&user)
 	// // SELECT * FROM users WHERE name = "jinzhu" AND age = 20 ORDER BY id LIMIT 1;
 
@@ -42,11 +55,32 @@ func (r *UserRepository) Select(params ...interface{}) (*User, error) {
 
 	return nil, nil
 }
-func (r *UserRepository) Insert(params ...interface{}) (*User, error) {
-	// pt := &Patient{User: User{Name: "Helena", JMBG: "29079985410212", Username: "hely", Password: "hely", Email: "hely@mail.lol", IsAdmin: false}, PIN: "D43"}
-	// Create
-	// db.Create(pt)
-	return nil, nil
+func (r *UserRepository) Insert(user any) error {
+	switch user.(type) {
+	case Patient:
+		p, ok := user.(Patient)
+		if !ok {
+			return errors.New("Error while type into b")
+
+		}
+		tx := r.DB.Create(&p)
+		if tx.Error != nil {
+			return tx.Error
+		}
+	case Doctor:
+		d, ok := user.(Doctor)
+		if !ok {
+			return errors.New("Error while type into b")
+		}
+		tx := r.DB.Create(&d)
+		if tx.Error != nil {
+			return tx.Error
+		}
+	default:
+		return errors.New("Error while type into b")
+	}
+
+	return nil
 }
 
 func (r *UserRepository) Update(params ...interface{}) (*User, error) {
