@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 
+	crypto "github.com/nparavinja/chiron-project/back-legs/encryption"
 	"gorm.io/gorm"
 )
 
@@ -20,23 +21,40 @@ type Repository interface {
 	Delete(map[string]interface{}) (*User, error)
 }
 
-func (r *UserRepository) Select(user any, searchType string, params ...interface{}) (*User, error) {
+func (r *UserRepository) Select(searchType string, data ...any) (any, error) {
 	// or map[string]interface{}
 	// queries here
 	// user service
 	switch searchType {
 	case "register":
-		// parameters := make
-		// implement logi for username, email if exist
+		parameters := make([]string, len(data))
+		for _, param := range data {
+			parameters = append(parameters, param.(string))
+		}
+		var p Patient
+		found := true
+		if result := r.DB.Joins("User").First(&p, "username = ? OR email = ?", parameters[0], parameters[1]); result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				found = false
+				return found, nil
+			}
+			return nil, result.Error
+		}
+		return found, nil
 	case "login":
-
+		var p Patient
+		// get hashed password from db
+		result := r.DB.Joins("User").First(&p, "username = ?", data[0])
+		if result.Error != nil {
+			return nil, result.Error
+		}
+		if crypto.Compare(data[1].(string), p.User.Password) {
+			return p, nil
+		}
+		return nil, errors.New("Login error.")
 	default:
 
 	}
-
-	// var p Patient
-	// db.Joins("User").Find(&p, 1)
-	// result := db.Joins("User").First(&p, "username = ?", "oljasolja")
 
 	// // Struct0
 	// db.Where(&User{Name: "jinzhu", Age: 20}).First(&user)
