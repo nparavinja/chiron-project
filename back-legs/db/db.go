@@ -23,7 +23,7 @@ func Connect(connectionString string) (*gorm.DB, error) {
 }
 
 func Migrate(db *gorm.DB) bool {
-	err := db.AutoMigrate(Doctor{}, User{}, Patient{})
+	err := db.AutoMigrate(Doctor{}, Patient{}, Examination{}, Report{}, Therapy{}, Diagnosis{})
 	if err != nil {
 		log.Println("Error in auto migration")
 		log.Println(err.Error())

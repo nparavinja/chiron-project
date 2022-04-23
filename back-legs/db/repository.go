@@ -15,10 +15,10 @@ type ExaminationRepository struct {
 }
 
 type Repository interface {
-	Select(map[string]interface{}) (*User, error)
-	Insert(map[string]interface{}) (*User, error)
-	Update(map[string]interface{}) (*User, error)
-	Delete(map[string]interface{}) (*User, error)
+	Select(map[string]interface{}) (any, error)
+	Insert(map[string]interface{}) (any, error)
+	Update(map[string]interface{}) (any, error)
+	Delete(map[string]interface{}) (any, error)
 }
 
 func (r *UserRepository) Select(searchType string, data ...any) (any, error) {
@@ -27,13 +27,9 @@ func (r *UserRepository) Select(searchType string, data ...any) (any, error) {
 	// user service
 	switch searchType {
 	case "register":
-		parameters := make([]string, len(data))
-		for _, param := range data {
-			parameters = append(parameters, param.(string))
-		}
 		var p Patient
 		found := true
-		if result := r.DB.Joins("User").First(&p, "username = ? OR email = ?", parameters[0], parameters[1]); result.Error != nil {
+		if result := r.DB.First(&p, "username = ? OR email = ?", data[0], data[1]); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				found = false
 				return found, nil
@@ -44,11 +40,11 @@ func (r *UserRepository) Select(searchType string, data ...any) (any, error) {
 	case "login":
 		var p Patient
 		// get hashed password from db
-		result := r.DB.Joins("User").First(&p, "username = ?", data[0])
+		result := r.DB.First(&p, "username = ?", data[0])
 		if result.Error != nil {
 			return nil, result.Error
 		}
-		if crypto.Compare(data[1].(string), p.User.Password) {
+		if crypto.Compare(data[1].(string), p.Password) {
 			return p, nil
 		}
 		return nil, errors.New("Login error.")
@@ -101,7 +97,7 @@ func (r *UserRepository) Insert(user any) error {
 	return nil
 }
 
-func (r *UserRepository) Update(params ...interface{}) (*User, error) {
+func (r *UserRepository) Update(params ...interface{}) (any, error) {
 	// // Update - update product's price to 200
 	// db.Model(&product).Update("Price", 200)
 	// // Update - update multiple fields
@@ -110,7 +106,47 @@ func (r *UserRepository) Update(params ...interface{}) (*User, error) {
 
 	return nil, nil
 }
-func (r *UserRepository) Delete(params ...interface{}) (*User, error) {
+func (r *UserRepository) Delete(params ...interface{}) (any, error) {
+
+	return nil, nil
+}
+
+func (e *ExaminationRepository) Select(searchType string, data ...any) (any, error) {
+	// or map[string]interface{}
+	// queries here
+	// user service
+	switch searchType {
+	case "register":
+		var p Patient
+		found := true
+		if result := e.DB.First(&p, "username = ? OR email = ?", data[0], data[1]); result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				found = false
+				return found, nil
+			}
+			return nil, result.Error
+		}
+		return found, nil
+	case "login":
+
+	default:
+
+	}
+
+	// // Struct0
+	// db.Where(&User{Name: "jinzhu", Age: 20}).First(&user)
+	// // SELECT * FROM users WHERE name = "jinzhu" AND age = 20 ORDER BY id LIMIT 1;
+
+	// // Map
+	// db.Where({"name": "jinzhu", "age": 20}).Find(&users)
+	// // SELECT * FROM users WHERE name = "jinzhu" AND age = 20;
+
+	// fmt.Println(result.QueryFields)
+
+	// db.First(&product, "code = ?", "D42") // find product with code D42
+
+	// // Delete - delete product
+	// db.Delete(&product, 1)
 
 	return nil, nil
 }

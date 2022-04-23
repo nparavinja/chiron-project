@@ -55,6 +55,7 @@ func (s *server) handleUser() http.HandlerFunc {
 		if err != nil {
 			json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error(), "errorDetails": err})
 		} else {
+			//
 			json.NewEncoder(w).Encode(map[string]interface{}{"result": result})
 		}
 	})
