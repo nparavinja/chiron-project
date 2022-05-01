@@ -18,7 +18,7 @@ type PatientResponse struct {
 }
 
 func (PatientService *PatientService) Login(username string, password string) (any, error) {
-	result, err := PatientService.UserRepository.Select("login", username, password)
+	result, err := PatientService.UserRepository.Select(db.Patient{}, "login", username, password)
 	if err != nil {
 		// some error
 		return nil, err
@@ -37,7 +37,7 @@ func (PatientService *PatientService) Login(username string, password string) (a
 }
 func (PatientService *PatientService) Register(name string, username string, password string, email string, jmbg string, pin string) (any, error) { // data check here
 	var p db.Patient
-	found, err := PatientService.UserRepository.Select("register", username, email)
+	found, err := PatientService.UserRepository.Select(db.Patient{}, "register", username, email)
 	if err != nil {
 		return nil, err
 	}

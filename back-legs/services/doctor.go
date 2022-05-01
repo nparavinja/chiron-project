@@ -4,17 +4,35 @@ import (
 	"fmt"
 
 	"github.com/nparavinja/chiron-project/back-legs/db"
+	crypto "github.com/nparavinja/chiron-project/back-legs/encryption"
 )
 
 type DoctorService struct {
 	UserRepository *db.UserRepository
 }
 
-func (DoctorService *DoctorService) Login(username string, password string) {
-	fmt.Println("DoctorService Login called:")
-	// data check here
+type DoctorResponse struct {
+	Success    bool     `json:"success"`
+	DoctorData []string `json:"data"`
+	Jwt        string   `json:"jwt,omitempty"`
+}
 
-	// if valid data, call userRepository.Select or smthing
+func (DoctorService *DoctorService) Login(username string, password string) (any, error) {
+	result, err := DoctorService.UserRepository.Select(db.Doctor{}, "login", username, password)
+	if err != nil {
+		// some error
+		return nil, err
+	}
+	var response DoctorResponse
+	doctor, ok := result.(db.Doctor)
+	if !ok {
+		return nil, err
+	}
+	response.Success = true
+	response.DoctorData = append(response.DoctorData, doctor.Username, doctor.Name)
+	// generate jwt
+	response.Jwt = crypto.CreateJWT(username)
+	return response, nil
 }
 func (DoctorService *DoctorService) Register(name string, username string, password string, email string, jmbg string) (db.Patient, error) { // data check here
 	p := db.Patient{Username: username, Password: password, Email: email, Name: name, JMBG: jmbg}

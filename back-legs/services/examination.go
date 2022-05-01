@@ -21,11 +21,11 @@ func (ExaminationService *ExaminationService) SetupAppointment(username string) 
 }
 
 func (ExaminationService *ExaminationService) GetExaminations(username string) (any, error) {
-	result, err := ExaminationService.ExaminationRepository.Select("", username)
-	if err != nil {
-		// some error
-		return nil, err
-	}
+	// result, err := ExaminationService.ExaminationRepository.Select("", username)
+	// if err != nil {
+	// 	// some error
+	// 	return nil, err
+	// }
 
-	return result, nil
+	return username, nil
 }

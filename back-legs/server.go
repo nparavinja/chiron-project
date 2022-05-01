@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/nparavinja/chiron-project/back-legs/db"
@@ -36,16 +35,8 @@ func StartServer(config Config) (*server, error) {
 	}
 	// init routes
 	s.router.HandleFunc("/api/usr/", s.handleUser()).Methods("POST")
-	s.router.HandleFunc("/api/exm/", s.handleExamination()).Methods("POST")
-	s.router.HandleFunc("/admin/", s.handleAdmin())
+	s.router.HandleFunc("/api/exm/", JWTMiddleware(s.handleExamination())).Methods("POST")
+	s.router.HandleFunc("/admin/", logger(JWTMiddleware(s.handleAdmin())))
 	log.Println("Services and routers initialized...")
 	return s, nil
-}
-
-func (s *server) middleware(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// some jwt check
-
-		// next handler (w, r)
-	}
 }

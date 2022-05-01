@@ -1,6 +1,7 @@
 package encryption
 
 import (
+	"errors"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -55,7 +56,7 @@ func CreateJWT(username string) string {
 
 // https://www.sohamkamani.com/golang/jwt-authentication/
 
-func ParseJWT(token string) bool {
+func ParseJWT(token string) (bool, error) {
 	claims := &Claims{}
 	var jwtKey = []byte("my_secret_key")
 	// Parse the JWT string and store the result in `claims`.
@@ -66,19 +67,11 @@ func ParseJWT(token string) bool {
 		return jwtKey, nil
 	})
 	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			// w.WriteHeader(http.StatusUnauthorized)
-			// return
-		}
-		// w.WriteHeader(http.StatusBadRequest)
-		return false
+		return false, err
 	}
 	if !tkn.Valid {
 		// w.WriteHeader(http.StatusUnauthorized)
-		return false
+		return false, errors.New("Invalid token")
 	}
-	return true
-	// Finally, return the welcome message to the user, along with their
-	// username given in the token
-	// w.Write([]byte(fmt.Sprintf("Welcome %s!", claims.Username)))
+	return true, nil
 }

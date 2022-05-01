@@ -21,33 +21,40 @@ type Repository interface {
 	Delete(map[string]interface{}) (any, error)
 }
 
-func (r *UserRepository) Select(searchType string, data ...any) (any, error) {
+func (r *UserRepository) Select(userType any, searchType string, data ...any) (any, error) {
 	// or map[string]interface{}
 	// queries here
 	// user service
-	switch searchType {
-	case "register":
-		var p Patient
-		found := true
-		if result := r.DB.First(&p, "username = ? OR email = ?", data[0], data[1]); result.Error != nil {
-			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				found = false
-				return found, nil
+
+	switch userType.(type) {
+	case Doctor:
+
+	case Patient:
+		switch searchType {
+		case "register":
+			var p Patient
+			found := true
+			if result := r.DB.First(&p, "username = ? OR email = ?", data[0], data[1]); result.Error != nil {
+				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+					found = false
+					return found, nil
+				}
+				return nil, result.Error
 			}
-			return nil, result.Error
+			return found, nil
+		case "login":
+			var p Patient
+			// get hashed password from db
+			result := r.DB.First(&p, "username = ?", data[0])
+			if result.Error != nil {
+				return nil, result.Error
+			}
+			if crypto.Compare(data[1].(string), p.Password) {
+				return p, nil
+			}
+			return nil, errors.New("Login error.")
+		default:
 		}
-		return found, nil
-	case "login":
-		var p Patient
-		// get hashed password from db
-		result := r.DB.First(&p, "username = ?", data[0])
-		if result.Error != nil {
-			return nil, result.Error
-		}
-		if crypto.Compare(data[1].(string), p.Password) {
-			return p, nil
-		}
-		return nil, errors.New("Login error.")
 	default:
 
 	}
