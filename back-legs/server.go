@@ -35,7 +35,7 @@ func StartServer(config Config) (*server, error) {
 	}
 	// init routes
 	s.router.HandleFunc("/api/usr/", s.handleUser()).Methods("POST")
-	s.router.HandleFunc("/api/exm/", JWTMiddleware(s.handleExamination())).Methods("POST")
+	s.router.HandleFunc("/api/exm/", s.handleExamination()).Methods("POST")
 	s.router.HandleFunc("/admin/", logger(JWTMiddleware(s.handleAdmin())))
 	log.Println("Services and routers initialized...")
 	return s, nil

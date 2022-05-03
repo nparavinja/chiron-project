@@ -33,8 +33,7 @@ func Compare(text string, encryptedText string) bool {
 func CreateJWT(username string) string {
 	var jwtKey = []byte("my_secret_key")
 	// Declare the expiration time of the token
-	// here, we have kept it as 5 minutes
-	expirationTime := time.Now().Add(15 * time.Minute)
+	expirationTime := time.Now().Add(15000 * time.Minute)
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{
 		Username: username,

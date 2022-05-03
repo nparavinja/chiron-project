@@ -6,25 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Product struct {
-	gorm.Model
-	Code  string
-	Price uint
-}
-
 type Doctor struct {
-	gorm.Model
-	Name        string
-	JMBG        string
-	Username    string
-	Password    string
-	Email       string
-	IsAdmin     bool
-	LicenseNo   string
-	Examination []Examination
-}
-
-type Patient struct {
 	gorm.Model
 	Name         string
 	JMBG         string
@@ -32,17 +14,30 @@ type Patient struct {
 	Password     string
 	Email        string
 	IsAdmin      bool
-	PIN          string
+	LicenseNo    string
 	Examinations []Examination
 }
 
+type Patient struct {
+	gorm.Model   `json:"-"`
+	Name         string        `json:"name"`
+	JMBG         string        `json:"-"`
+	Username     string        `json:"username"`
+	Password     string        `json:"-"`
+	Email        string        `json:"email"`
+	IsAdmin      bool          `json:"-"`
+	PIN          string        `json:"-"`
+	Examinations []Examination `json:"examinations"`
+}
+
 type Examination struct {
-	gorm.Model
-	Timestamp time.Time
-	status    rune
-	Report    Report
-	PatientID uint
-	DoctorID  uint
+	gorm.Model     `json:"-"`
+	TimestampStart time.Time `json:"tsStart"`
+	TimestampEnd   time.Time `json:"tsEnd"`
+	Status         rune      `json:"status"`
+	Report         Report    `json:"report"`
+	PatientID      uint      `json:"patient"`
+	DoctorID       uint      `json:"doctor"`
 }
 
 type Report struct {

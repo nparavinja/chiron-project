@@ -118,25 +118,22 @@ func (r *UserRepository) Delete(params ...interface{}) (any, error) {
 	return nil, nil
 }
 
-func (e *ExaminationRepository) Select(searchType string, data ...any) (any, error) {
-	// or map[string]interface{}
-	// queries here
-	// user service
-	switch searchType {
-	case "register":
-		var p Patient
-		found := true
-		if result := e.DB.First(&p, "username = ? OR email = ?", data[0], data[1]); result.Error != nil {
-			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				found = false
-				return found, nil
-			}
-			return nil, result.Error
-		}
-		return found, nil
-	case "login":
+type ExaminationDBResponse struct {
+	response []map[string]any
+}
 
+func (e *ExaminationRepository) Select(searchType string, data ...any) (any, error) {
+	switch searchType {
+	case "all-p":
+		var patient Patient
+		// implement logic for one
+		tx := e.DB.Preload("Examinations").Preload("Examinations.Report").Preload("Examinations.Report.Therapies").Preload("Examinations.Report.Diagnosis").Find(&patient, "id = ?", data[0])
+		if tx.Error != nil {
+			return nil, tx.Error
+		}
+		return patient, nil
 	default:
+		return nil, errors.New("unexpectedError")
 
 	}
 
@@ -154,6 +151,12 @@ func (e *ExaminationRepository) Select(searchType string, data ...any) (any, err
 
 	// // Delete - delete product
 	// db.Delete(&product, 1)
+}
 
-	return nil, nil
+func (r *ExaminationRepository) Insert(ex Examination) error {
+	tx := r.DB.Create(&ex)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
 }
