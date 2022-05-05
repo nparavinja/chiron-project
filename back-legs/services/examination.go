@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/nparavinja/chiron-project/back-legs/db"
 )
 
@@ -12,14 +13,29 @@ type ExaminationService struct {
 }
 
 type ExaminationResponse struct {
-	Success bool `json:"success"`
-	Data    any  `json:"data,omitempty"`
+	Success bool  `json:"success"`
+	Data    []any `json:"data,omitempty"`
 }
+
+const (
+	Pending = iota
+	Approved
+	InProgress
+	Done
+)
 
 type Result struct {
 }
 
-func (ExaminationService *ExaminationService) SetupAppointment(patientID uint, doctorId uint, timestampStart string, timestampEnd string) (any, error) {
+func (ExaminationService *ExaminationService) SetupAppointment(patientID string, doctorID string, timestampStart string, timestampEnd string) (any, error) {
+	patientUUID, err := uuid.Parse(patientID)
+	if err != nil {
+		return nil, err
+	}
+	doctorUUID, err := uuid.Parse(doctorID)
+	if err != nil {
+		return nil, err
+	}
 	// convert string to time.Time format
 	// Parse the date string into Go's time object
 	// The 1st param specifies the format,
@@ -38,7 +54,7 @@ func (ExaminationService *ExaminationService) SetupAppointment(patientID uint, d
 	}
 	// logic for date comparing -> older, do they exist in db, check timestamps
 
-	e := db.Examination{PatientID: patientID, DoctorID: doctorId, TimestampStart: st, TimestampEnd: et, Status: 1}
+	e := db.Examination{PatientID: patientUUID, DoctorID: doctorUUID, TimestampStart: st, TimestampEnd: et, Status: Pending}
 	err = ExaminationService.ExaminationRepository.Insert(e)
 	if err != nil {
 		// some error
@@ -49,16 +65,17 @@ func (ExaminationService *ExaminationService) SetupAppointment(patientID uint, d
 	return response, nil
 }
 
-func (ExaminationService *ExaminationService) GetExaminations(patientID uint) (any, error) {
+func (ExaminationService *ExaminationService) GetExaminations(patientID string) (any, error) {
 	result, err := ExaminationService.ExaminationRepository.Select("all-p", patientID)
 	if err != nil {
 		// some error
 		return nil, err
 	}
-	// format response here - perhaps a helper function
 	var response ExaminationResponse
+	var patient = result.(db.Patient)
+	// format response here - perhaps a helper function
 	response.Success = true
-	response.Data = result.(db.Patient)
+	response.Data = append(response.Data, patient.Examinations)
 
 	return response, nil
 }

@@ -105,10 +105,49 @@ func (s *server) handleExamination() http.HandlerFunc {
 }
 
 func (s *server) handleAdmin() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// use thing
-		w.Write([]byte("hello hello"))
+	invoke := func(responseWriter http.ResponseWriter, request *http.Request) (interface{}, error) {
+		// ok, err := crypto.ParseJWT(request.Header.Get("jwt"))
+		// if !ok {
+		// 	return "jwtError", err
+		// }
+		body, err := ioutil.ReadAll(request.Body)
+		if err != nil {
+			return "errorReadingRequest", err
+		}
+		var req Request
+		err = json.Unmarshal(body, &req)
+		if err != nil {
+			return "errorUnmarshallingRequest", err
+		}
+		service := s.adminService
+		method := reflect.ValueOf(service).MethodByName(req.MethodName)
+		parameters := make([]reflect.Value, len(req.Arguments))
+		for i, parameter := range req.Arguments {
+			p := reflect.New(method.Type().In(i))
+			instance := p.Interface()
+			err := json.Unmarshal([]byte(parameter), &instance)
+			if err != nil {
+				return "errorUnmarshalingParameter", err
+			}
+			parameters[i] = p.Elem()
+		}
+		result := method.Call(parameters)
+		// result is a slice of []reflect.Value
+		error, ok := result[1].Interface().(error)
+		if ok {
+			return nil, error
+		}
+		return result[0].Interface(), nil
 	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		result, err := invoke(w, r)
+		if err != nil {
+			json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error(), "errorDetails": err})
+		} else {
+			//
+			json.NewEncoder(w).Encode(map[string]interface{}{"result": result})
+		}
+	})
 }
 
 func logger(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {

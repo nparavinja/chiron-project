@@ -31,7 +31,7 @@ func (PatientService *PatientService) Login(username string, password string) (a
 	response.Success = true
 	response.PatientData = append(response.PatientData, patient.Username, patient.Email, patient.JMBG, patient.PIN)
 	// generate jwt
-	response.Jwt = crypto.CreateJWT(username)
+	response.Jwt = crypto.CreateJWT(username, patient.ID.String())
 
 	return response, nil
 }
@@ -58,20 +58,20 @@ func (PatientService *PatientService) Register(name string, username string, pas
 }
 
 func (PatientService *PatientService) Update(username string, password string) (any, error) {
-	result, err := PatientService.UserRepository.Update(username, password)
-	if err != nil {
-		// some error
-		return nil, err
-	}
-	var response PatientResponse
-	patient, ok := result.(db.Patient)
-	if !ok {
-		return nil, err
-	}
-	response.Success = true
-	response.PatientData = append(response.PatientData, patient.Username, patient.Email, patient.JMBG, patient.PIN)
-	// generate jwt
-	response.Jwt = crypto.CreateJWT(username)
+	// result, err := PatientService.UserRepository.Update(username, password)
+	// if err != nil {
+	// 	// some error
+	// 	return nil, err
+	// }
+	// var response PatientResponse
+	// patient, ok := result.(db.Patient)
+	// if !ok {
+	// 	return nil, err
+	// }
+	// response.Success = true
+	// response.PatientData = append(response.PatientData, patient.Username, patient.Email, patient.JMBG, patient.PIN)
+	// // generate jwt
+	// response.Jwt = crypto.CreateJWT(username)
 
-	return response, nil
+	return nil, nil
 }

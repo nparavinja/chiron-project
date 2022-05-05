@@ -13,6 +13,7 @@ type server struct {
 	patientService     *services.PatientService
 	doctorService      *services.DoctorService
 	examinationService *services.ExaminationService
+	adminService       *services.AdminService
 }
 
 func StartServer(config Config) (*server, error) {
@@ -32,11 +33,13 @@ func StartServer(config Config) (*server, error) {
 		patientService:     &services.PatientService{UserRepository: &db.UserRepository{DB: dbConnection}},
 		doctorService:      &services.DoctorService{UserRepository: &db.UserRepository{DB: dbConnection}},
 		examinationService: &services.ExaminationService{ExaminationRepository: &db.ExaminationRepository{DB: dbConnection}},
+		adminService:       &services.AdminService{UserRepository: &db.UserRepository{DB: dbConnection}},
 	}
 	// init routes
 	s.router.HandleFunc("/api/usr/", s.handleUser()).Methods("POST")
 	s.router.HandleFunc("/api/exm/", s.handleExamination()).Methods("POST")
-	s.router.HandleFunc("/admin/", logger(JWTMiddleware(s.handleAdmin())))
+	s.router.HandleFunc("/admin/", s.handleAdmin())
+	// s.router.HandleFunc("/admin/", logger(JWTMiddleware(s.handleAdmin())))
 	log.Println("Services and routers initialized...")
 	return s, nil
 }

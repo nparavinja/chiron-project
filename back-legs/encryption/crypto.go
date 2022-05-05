@@ -12,6 +12,7 @@ import (
 // We add jwt.StandardClaims as an embedded type, to provide fields like expiry time
 type Claims struct {
 	Username string `json:"username"`
+	ID       string `json:"id"`
 	jwt.StandardClaims
 }
 
@@ -30,13 +31,14 @@ func Compare(text string, encryptedText string) bool {
 	return true
 }
 
-func CreateJWT(username string) string {
+func CreateJWT(username string, uuid string) string {
 	var jwtKey = []byte("my_secret_key")
 	// Declare the expiration time of the token
 	expirationTime := time.Now().Add(15000 * time.Minute)
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{
 		Username: username,
+		ID:       uuid,
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expirationTime.Unix(),

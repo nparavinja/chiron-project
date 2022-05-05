@@ -28,6 +28,27 @@ func (r *UserRepository) Select(userType any, searchType string, data ...any) (a
 
 	switch userType.(type) {
 	case Doctor:
+		switch searchType {
+		case "all":
+			var doctors []Doctor
+			tx := r.DB.Find(&doctors)
+			if tx.Error != nil {
+				return nil, tx.Error
+			}
+			return doctors, nil
+		case "not-added":
+			var p Patient
+			// get hashed password from db
+			result := r.DB.First(&p, "username = ?", data[0])
+			if result.Error != nil {
+				return nil, result.Error
+			}
+			if crypto.Compare(data[1].(string), p.Password) {
+				return p, nil
+			}
+			return nil, errors.New("Login error.")
+		default:
+		}
 
 	case Patient:
 		switch searchType {
@@ -37,7 +58,7 @@ func (r *UserRepository) Select(userType any, searchType string, data ...any) (a
 			if result := r.DB.First(&p, "username = ? OR email = ?", data[0], data[1]); result.Error != nil {
 				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 					found = false
-					return found, nil
+					return found, result.Error
 				}
 				return nil, result.Error
 			}
@@ -113,13 +134,28 @@ func (r *UserRepository) Update(params ...interface{}) (any, error) {
 
 	return nil, nil
 }
-func (r *UserRepository) Delete(params ...interface{}) (any, error) {
-
-	return nil, nil
-}
-
-type ExaminationDBResponse struct {
-	response []map[string]any
+func (r *UserRepository) Delete(user any, data ...interface{}) error {
+	switch user.(type) {
+	case Patient:
+		var p Patient
+		tx := r.DB.Delete(&p, data[0])
+		if tx.Error != nil {
+			return tx.Error
+		}
+	case Doctor:
+		var d Doctor
+		tx := r.DB.Where("id = ?", data[0]).Delete(&d)
+		// check if something is really deleted
+		if tx.Error != nil {
+			return tx.Error
+		}
+		if tx.RowsAffected == 0 {
+			return errors.New("No user found for ID.")
+		}
+	default:
+		return errors.New("Error while type asserting")
+	}
+	return nil
 }
 
 func (e *ExaminationRepository) Select(searchType string, data ...any) (any, error) {
