@@ -1,8 +1,6 @@
 package services
 
 import (
-	"fmt"
-
 	"github.com/nparavinja/chiron-project/back-legs/db"
 	crypto "github.com/nparavinja/chiron-project/back-legs/encryption"
 )
@@ -33,12 +31,4 @@ func (DoctorService *DoctorService) Login(username string, password string) (any
 	// generate jwt
 	response.Jwt = crypto.CreateJWT(username, doctor.ID.String())
 	return response, nil
-}
-func (DoctorService *DoctorService) Register(name string, username string, password string, email string, jmbg string) (db.Patient, error) { // data check here
-	p := db.Patient{Username: username, Password: password, Email: email, Name: name, JMBG: jmbg}
-	fmt.Println(p)
-
-	// if valid data, call userRepository.Select or smthing
-	return p, nil
-
 }

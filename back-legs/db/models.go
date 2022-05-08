@@ -11,7 +11,7 @@ type Doctor struct {
 	ID           uuid.UUID `json:"id" gorm:"type:varchar(36)"`
 	Name         string    `json:"name" gorm:"type:varchar(50)"`
 	Username     string    `json:"username" gorm:"type:varchar(50)"`
-	Password     string    `json:"-" gorm:"type:varchar(50)"`
+	Password     string    `json:"-"`
 	Email        string    `json:"email" gorm:"type:varchar(50)"`
 	LicenseNo    string    `json:"licenseNo" gorm:"type:varchar(10)"`
 	Examinations []Examination
@@ -41,7 +41,7 @@ type Examination struct {
 type Report struct {
 	ID            uint      `json:"id"`
 	Name          string    `gorm:"type:text" json:"name"`
-	Therapies     []Therapy `json:"therapies"`
+	Therapy       Therapy   `json:"therapy"`
 	Diagnosis     Diagnosis `json:"diagnosis"`
 	ExaminationID uuid.UUID `json:"-"`
 }

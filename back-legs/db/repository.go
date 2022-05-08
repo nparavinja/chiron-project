@@ -36,6 +36,17 @@ func (r *UserRepository) Select(userType any, searchType string, data ...any) (a
 				return nil, tx.Error
 			}
 			return doctors, nil
+		case "register":
+			var d Doctor
+			found := true
+			if result := r.DB.First(&d, "username = ? OR email = ?", data[0], data[1]); result.Error != nil {
+				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+					found = false
+					return found, nil
+				}
+				return nil, result.Error
+			}
+			return found, nil
 		case "not-added":
 			var p Patient
 			// get hashed password from db
@@ -58,7 +69,7 @@ func (r *UserRepository) Select(userType any, searchType string, data ...any) (a
 			if result := r.DB.First(&p, "username = ? OR email = ?", data[0], data[1]); result.Error != nil {
 				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 					found = false
-					return found, result.Error
+					return found, nil
 				}
 				return nil, result.Error
 			}
@@ -163,7 +174,7 @@ func (e *ExaminationRepository) Select(searchType string, data ...any) (any, err
 	case "all-p":
 		var patient Patient
 		// implement logic for one
-		tx := e.DB.Preload("Examinations").Preload("Examinations.Report").Preload("Examinations.Report.Therapies").Preload("Examinations.Report.Diagnosis").Find(&patient, "id = ?", data[0])
+		tx := e.DB.Preload("Examinations").Preload("Examinations.Report").Preload("Examinations.Report.Therapy").Preload("Examinations.Report.Diagnosis").Find(&patient, "id = ?", data[0])
 		if tx.Error != nil {
 			return nil, tx.Error
 		}
@@ -172,25 +183,18 @@ func (e *ExaminationRepository) Select(searchType string, data ...any) (any, err
 		return nil, errors.New("unexpectedError")
 
 	}
-
-	// // Struct0
-	// db.Where(&User{Name: "jinzhu", Age: 20}).First(&user)
-	// // SELECT * FROM users WHERE name = "jinzhu" AND age = 20 ORDER BY id LIMIT 1;
-
-	// // Map
-	// db.Where({"name": "jinzhu", "age": 20}).Find(&users)
-	// // SELECT * FROM users WHERE name = "jinzhu" AND age = 20;
-
-	// fmt.Println(result.QueryFields)
-
-	// db.First(&product, "code = ?", "D42") // find product with code D42
-
-	// // Delete - delete product
-	// db.Delete(&product, 1)
 }
 
 func (r *ExaminationRepository) Insert(ex Examination) error {
 	tx := r.DB.Create(&ex)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
+func (r *ExaminationRepository) Update(ex Examination) error {
+	tx := r.DB.Model(&ex).Updates(ex)
 	if tx.Error != nil {
 		return tx.Error
 	}

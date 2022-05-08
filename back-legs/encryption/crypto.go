@@ -2,6 +2,7 @@ package encryption
 
 import (
 	"errors"
+	"math/rand"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -29,6 +30,22 @@ func Compare(text string, encryptedText string) bool {
 		return false
 	}
 	return true
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func GenerateRandomPassword() (string, string, error) {
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, 8)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	firstPassword := string(b)
+	firstPasswordEncoded, err := EncryptText(firstPassword)
+	if err != nil {
+		return "", "", err
+	}
+	return firstPassword, firstPasswordEncoded, nil
 }
 
 func CreateJWT(username string, uuid string) string {

@@ -1,7 +1,11 @@
 package services
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/nparavinja/chiron-project/back-legs/db"
+	crypto "github.com/nparavinja/chiron-project/back-legs/encryption"
 )
 
 type AdminService struct {
@@ -16,16 +20,25 @@ type AdminResponse struct {
 
 func (AdminService *AdminService) AddDoctor(name string, username string, email string, licenseNo string) (any, error) {
 	// check for same username or email
-
+	found, err := AdminService.UserRepository.Select(db.Doctor{}, "register", username, email)
+	if err != nil {
+		return nil, err
+	}
+	if found.(bool) {
+		return nil, errors.New("Username/email already exist.")
+	}
 	// generate password
+	firstPassword, firstPasswordEncrypted, err := crypto.GenerateRandomPassword()
+	fmt.Println(firstPassword, firstPasswordEncrypted)
 
-	err := AdminService.UserRepository.Insert(db.Doctor{Name: name, Username: username, Email: email, LicenseNo: licenseNo, Password: "testpassword"})
+	err = AdminService.UserRepository.Insert(db.Doctor{Name: name, Username: username, Email: email, LicenseNo: licenseNo, Password: firstPasswordEncrypted})
 	if err != nil {
 		// some error
 		return nil, err
 	}
 
-	// send password to mail
+	// send firstPassword to mail
+
 	return "Doctor added successfully.", nil
 }
 func (AdminService *AdminService) GetDoctors() (any, error) { // data check here

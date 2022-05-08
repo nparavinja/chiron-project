@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -62,6 +63,53 @@ func (ExaminationService *ExaminationService) SetupAppointment(patientID string,
 	}
 	var response ExaminationResponse
 	response.Success = true
+	return response, nil
+}
+
+func (ExaminationService *ExaminationService) ConfirmAppointment(examinationID string) (any, error) {
+	examinationUUID, err := uuid.Parse(examinationID)
+	if err != nil {
+		return nil, err
+	}
+	e := db.Examination{ID: examinationUUID, Status: Approved}
+	err = ExaminationService.ExaminationRepository.Update(e)
+	if err != nil {
+		// some error
+		return nil, err
+	}
+	var response ExaminationResponse
+	// var patient = result.(db.Patient)
+	// format response here - perhaps a helper function
+	response.Success = true
+	// response.Data = append(response.Data, patient.Examinations)
+
+	return response, nil
+}
+
+func (ExaminationService *ExaminationService) DoExamination(examinationID string, data map[string]map[string]any) (any, error) {
+	examinationUUID, err := uuid.Parse(examinationID)
+	if err != nil {
+		return nil, err
+	}
+	// check if examination is approved
+
+	// convert data to report, diagnosis and therapies
+	if data["report"] == nil || data["diagnosis"] == nil || data["therapy"] == nil {
+		return nil, errors.New("Invalid parameters.")
+	}
+
+	e := db.Examination{ID: examinationUUID, Status: Done, Report: db.Report{Name: data["report"]["name"].(string), Therapy: db.Therapy{Comment: data["therapy"]["comment"].(string)}, Diagnosis: db.Diagnosis{Name: data["diagnosis"]["name"].(string), Comment: data["diagnosis"]["comment"].(string)}}}
+	err = ExaminationService.ExaminationRepository.Update(e)
+	if err != nil {
+		// some error
+		return nil, err
+	}
+	var response ExaminationResponse
+	// var patient = result.(db.Patient)
+	// format response here - perhaps a helper function
+	response.Success = true
+	// response.Data = append(response.Data, patient.Examinations)
+
 	return response, nil
 }
 
