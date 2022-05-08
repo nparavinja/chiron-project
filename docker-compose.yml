@@ -1,57 +1,62 @@
-version: '3'
+version: '3.8'
 services:
-  app:
-    container_name: full_app
-    build: .
-    ports: 
-      - 8080:8080 
-    restart: on-failure
-    volumes:
-      - api:/usr/src/app/
-    depends_on:
-      - fullstack-mysql          
+  backend:
+    container_name: chiron-backend
+    build: back-legs
+    secrets: 
+      - db-password
     networks:
-      - fullstack
-
-
-  fullstack-mysql:
-    image: mysql:5.7
-    container_name: full_db_mysql
-    ports: 
-      - 3306:3306
-    environment: 
-      - MYSQL_ROOT_HOST=${DB_HOST} 
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DATABASE=${DB_NAME}
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - database_mysql:/var/lib/mysql
-    networks:
-      - fullstack
-  
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin_container
-    depends_on:
-      - fullstack-mysql
-    environment:
-      - PMA_HOST=fullstack-mysql # Note the "fullstack-mysql". Must be the name of the what you used as the mysql service.
-      - PMA_USER=${DB_USER}
-      - PMA_PORT=${DB_PORT}
-      - PMA_PASSWORD=${DB_PASSWORD}
+      - back-end-network
     ports:
-      - 9090:80
+      - 8000:8000
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mysql:8.0.27
+    container_name: chiron-db
+    # image: mariadb:10.6.4-focal
+    command: '--default-authentication-plugin=mysql_native_password'
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    secrets:
+      - db-password
     networks:
-      - fullstack
-
-
+      - back-end-network
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=chiron
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db-password
+    expose:
+      - 3306
+  # proxy:
+  #   build: proxy
+  #   ports:
+  #     - 80:80
+  #   depends_on: 
+  #     - backend
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: chiron-phpmyadmin
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      - PMA_HOST=chiron-db
+    depends_on:
+      - chiron-db
+    networks:
+      - back-end-network
 volumes:
-  api:
-  database_mysql:                  
-
-# Networks to be created to facilitate communication between containers
+  db:
 networks:
-  fullstack:
-    driver: bridge
+  back-end-network:
+    driver: "bridge"
+secrets:
+  db-password:
+    file: /back-legs/db/db-password.txt

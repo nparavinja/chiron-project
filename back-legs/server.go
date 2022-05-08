@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"log"
 
 	"github.com/gorilla/mux"
@@ -17,9 +18,12 @@ type server struct {
 }
 
 func StartServer(config Config) (*server, error) {
-	// init db
-	// test
-	dbConnection, err := db.Connect(config.SQLConnectionString)
+	// read pass from db-secret
+	binPass, err := ioutil.ReadFile("/run/secrets/db-password")
+	if err != nil {
+		return nil, err
+	}
+	dbConnection, err := db.Connect(string(binPass))
 	if err != nil {
 		// handle db errors
 		// log

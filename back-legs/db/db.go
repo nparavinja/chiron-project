@@ -2,13 +2,15 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-func Connect(connectionString string) (*gorm.DB, error) {
+func Connect(pass string) (*gorm.DB, error) {
+	connectionString := fmt.Sprintf("root:%s@tcp(chiron-db:3306)/chiron?charset=utf8mb4&parseTime=True&loc=Local", pass)
 	gormDb, err := gorm.Open(mysql.Open(connectionString), &gorm.Config{})
 	if err != nil {
 		log.Println("Failed to connect to database")
