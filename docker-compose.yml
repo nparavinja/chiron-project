@@ -1,18 +1,12 @@
 version: '3.8'
 services:
-  # proxy:
-  #   build: proxy
-  #   ports:
-  #     - 80:80
-  #   depends_on: 
-  #     - backend
-  # frontend:
-  #   container_name: chiron-frontend
-  #   build: front-test-ang-app
-  #   networks: 
-  #     - back-end-network
-  #   ports: 
-  #     - 4200:4200
+  frontend:
+    container_name: chiron-frontend
+    build: front-test-ang-app
+    networks: 
+      - back-end-network
+    ports: 
+      - 4200:80
   backend:
     container_name: chiron-backend
     build: back-legs
